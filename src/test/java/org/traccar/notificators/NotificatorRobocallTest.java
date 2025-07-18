@@ -209,4 +209,89 @@ public class NotificatorRobocallTest {
         // Verify phone number is properly formatted
         verify(client).target(contains("caller_id=%2B923001234567"));
     }
+
+    @Test
+    public void testEventTypeBasedVoiceId() throws Exception {
+        // Setup user
+        User user = new User();
+        user.setId(1L);
+        user.setPhone("923001234567");
+        user.setName("Test User");
+        
+        // Setup device
+        Device device = new Device();
+        device.setId(1L);
+        device.setName("Test Vehicle");
+        
+        // Setup event with specific type
+        Event event = new Event();
+        event.setId(100L);
+        event.setDeviceId(1L);
+        event.setType("deviceOffline"); // This should map to voice ID 211
+        
+        // Setup position and message
+        Position position = new Position();
+        NotificationMessage message = new NotificationMessage("Test", "Test");
+        
+        // Mock storage
+        when(storage.getObject(eq(Device.class), any(Request.class))).thenReturn(device);
+        when(storage.addObject(any(RobocallLog.class), any(Request.class))).thenReturn(1L);
+        
+        // Mock HTTP client
+        when(client.target(anyString())).thenReturn(webTarget);
+        when(webTarget.request()).thenReturn(builder);
+        when(builder.get()).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+        when(response.readEntity(String.class)).thenReturn("{\"rc_id\":\"12345\"}");
+        
+        // Execute
+        notificator.send(user, message, event, position);
+        
+        // Verify that voice_id=211 is used for deviceOffline events
+        verify(client).target(contains("voice_id=211"));
+    }
+
+    @Test
+    public void testCustomEventVoiceIdMapping() throws Exception {
+        // Setup user
+        User user = new User();
+        user.setId(1L);
+        user.setPhone("923001234567");
+        user.setName("Test User");
+        
+        // Setup device with custom voice ID mapping for specific event type
+        Device device = new Device();
+        device.setId(1L);
+        device.setName("Test Vehicle");
+        Map<String, Object> deviceAttributes = new HashMap<>();
+        deviceAttributes.put("robocallVoiceId.deviceOffline", "999"); // Custom voice for device offline
+        device.setAttributes(deviceAttributes);
+        
+        // Setup event
+        Event event = new Event();
+        event.setId(100L);
+        event.setDeviceId(1L);
+        event.setType("deviceOffline");
+        
+        // Setup position and message
+        Position position = new Position();
+        NotificationMessage message = new NotificationMessage("Test", "Test");
+        
+        // Mock storage
+        when(storage.getObject(eq(Device.class), any(Request.class))).thenReturn(device);
+        when(storage.addObject(any(RobocallLog.class), any(Request.class))).thenReturn(1L);
+        
+        // Mock HTTP client
+        when(client.target(anyString())).thenReturn(webTarget);
+        when(webTarget.request()).thenReturn(builder);
+        when(builder.get()).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+        when(response.readEntity(String.class)).thenReturn("{\"rc_id\":\"12345\"}");
+        
+        // Execute
+        notificator.send(user, message, event, position);
+        
+        // Verify that custom voice_id=999 is used instead of default 211
+        verify(client).target(contains("voice_id=999"));
+    }
 }

@@ -264,11 +264,16 @@ public class NotificatorRobocall extends Notificator {
     }
 
     private String getVoiceId(Event event, Device device, User user) {
-        // Priority order: event attributes > device attributes > user attributes > default
+        // Priority order: specific event type mapping > event attributes > device attributes > user attributes > default
         String voiceId = null;
 
-        // Check event attributes first (if event has custom voice ID)
-        if (event.getAttributes() != null) {
+        // First check for event type specific voice ID mapping
+        if (event.getType() != null) {
+            voiceId = getVoiceIdForEventType(event.getType(), device, user);
+        }
+
+        // Check event attributes (for custom overrides)
+        if (voiceId == null && event.getAttributes() != null) {
             voiceId = (String) event.getAttributes().get("robocallVoiceId");
         }
 
@@ -284,10 +289,68 @@ public class NotificatorRobocall extends Notificator {
 
         // Default voice ID
         if (voiceId == null) {
-            voiceId = "210"; // Default voice ID as mentioned in requirements
+            voiceId = "210"; // Default voice ID
         }
 
         return voiceId;
+    }
+
+    private String getVoiceIdForEventType(String eventType, Device device, User user) {
+        // Check device-specific event type voice mapping first
+        if (device.getAttributes() != null) {
+            String deviceVoiceId = (String) device.getAttributes().get("robocallVoiceId." + eventType);
+            if (deviceVoiceId != null) {
+                return deviceVoiceId;
+            }
+        }
+
+        // Check user-specific event type voice mapping
+        if (user.getAttributes() != null) {
+            String userVoiceId = (String) user.getAttributes().get("robocallVoiceId." + eventType);
+            if (userVoiceId != null) {
+                return userVoiceId;
+            }
+        }
+
+        // Default voice IDs for common event types
+        switch (eventType) {
+            case "deviceOffline":
+                return "211"; // Voice for device offline alerts
+            case "deviceOnline":
+                return "212"; // Voice for device online alerts
+            case "deviceOverspeed":
+                return "213"; // Voice for overspeed alerts
+            case "geofenceEnter":
+                return "214"; // Voice for geofence entry
+            case "geofenceExit":
+                return "215"; // Voice for geofence exit
+            case "alarm":
+                return "216"; // Voice for alarm events
+            case "ignitionOn":
+                return "217"; // Voice for ignition on
+            case "ignitionOff":
+                return "218"; // Voice for ignition off
+            case "maintenance":
+                return "219"; // Voice for maintenance alerts
+            case "textMessage":
+                return "220"; // Voice for text messages
+            case "driverChanged":
+                return "221"; // Voice for driver changes
+            case "deviceMoving":
+                return "222"; // Voice for device moving
+            case "deviceStopped":
+                return "223"; // Voice for device stopped
+            case "deviceInactive":
+                return "224"; // Voice for device inactive
+            case "fuelDrop":
+                return "225"; // Voice for fuel drop
+            case "powerCut":
+                return "226"; // Voice for power cut
+            case "powerRestored":
+                return "227"; // Voice for power restored
+            default:
+                return null; // No specific voice ID, will use fallback
+        }
     }
 
     private String getVehicleNumber(Device device) {
