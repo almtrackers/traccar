@@ -27,5 +27,6 @@ public class WebModule extends ServletModule {
         filter("/api/*").through(ThrottlingFilter.class);
         filter("/api/media/*").through(MediaFilter.class);
         serve("/api/socket").with(AsyncSocketServlet.class);
+        serve("/robocall-logs").with(RobocallLogsServlet.class);
     }
 }
