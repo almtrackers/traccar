@@ -1295,6 +1295,20 @@ public final class Keys {
             List.of(KeyType.CONFIG));
 
     /**
+     * Robocall API key for authentication.
+     */
+    public static final ConfigKey<String> NOTIFICATOR_ROBOCALL_API_KEY = new StringConfigKey(
+            "notificator.robocall.apiKey",
+            List.of(KeyType.CONFIG));
+
+    /**
+     * Robocall API base URL.
+     */
+    public static final ConfigKey<String> NOTIFICATOR_ROBOCALL_URL = new StringConfigKey(
+            "notificator.robocall.url",
+            List.of(KeyType.CONFIG));
+
+    /**
      * Enable user expiration email notification.
      */
     public static final ConfigKey<Boolean> NOTIFICATION_EXPIRATION_USER = new BooleanConfigKey(
