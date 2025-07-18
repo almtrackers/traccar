@@ -88,6 +88,16 @@ public class Notification extends ExtendedModel implements Schedulable {
         this.notificators = transports;
     }
 
+    private String voiceId;
+
+    public String getVoiceId() {
+        return voiceId;
+    }
+
+    public void setVoiceId(String voiceId) {
+        this.voiceId = voiceId;
+    }
+
     @JsonIgnore
     @QueryIgnore
     public Set<String> getNotificatorsTypes() {

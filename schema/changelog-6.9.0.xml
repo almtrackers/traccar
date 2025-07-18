@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd"
+  logicalFilePath="changelog-6.9.0">
+
+  <changeSet author="traccar" id="changelog-6.9.0">
+
+    <addColumn tableName="tc_notifications">
+      <column name="voiceid" type="VARCHAR(128)">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+
+  </changeSet>
+
+</databaseChangeLog>

@@ -25,6 +25,7 @@ import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.model.Device;
 import org.traccar.model.Event;
+import org.traccar.model.Notification;
 import org.traccar.model.Position;
 import org.traccar.model.User;
 import org.traccar.notification.MessageException;
@@ -50,6 +51,7 @@ public class NotificatorRobocall extends Notificator {
     private final Storage storage;
     private final String apiKey;
     private final String baseUrl;
+    private ThreadLocal<Notification> currentNotification = new ThreadLocal<>();
 
     @Inject
     public NotificatorRobocall(
@@ -62,6 +64,16 @@ public class NotificatorRobocall extends Notificator {
         this.storage = storage;
         this.apiKey = config.getString(Keys.NOTIFICATOR_ROBOCALL_API_KEY);
         this.baseUrl = config.getString(Keys.NOTIFICATOR_ROBOCALL_URL, "https://portal.robocall.pk/api/calls");
+    }
+
+    @Override
+    public void send(Notification notification, User user, Event event, Position position) throws MessageException {
+        try {
+            currentNotification.set(notification);
+            super.send(notification, user, event, position);
+        } finally {
+            currentNotification.remove();
+        }
     }
 
     @Override
@@ -80,7 +92,8 @@ public class NotificatorRobocall extends Notificator {
             }
 
             // Extract voice ID from notification attributes
-            String voiceId = getVoiceId(event, device, user);
+            Notification notification = currentNotification.get();
+            String voiceId = getVoiceId(notification, event, device, user);
 
             // Extract text1 (vehicle number/name)
             String text1 = getVehicleNumber(device);
@@ -136,12 +149,17 @@ public class NotificatorRobocall extends Notificator {
         }
     }
 
-    private String getVoiceId(Event event, Device device, User user) {
-        // Priority order: event attributes > device attributes > user attributes > default
+    private String getVoiceId(Notification notification, Event event, Device device, User user) {
+        // Priority order: notification voiceId > event attributes > device attributes > user attributes > default
         String voiceId = null;
 
-        // Check event attributes first (if event has custom voice ID)
-        if (event.getAttributes() != null) {
+        // Check notification voiceId first (highest priority - per-event configuration)
+        if (notification.getVoiceId() != null && !notification.getVoiceId().trim().isEmpty()) {
+            voiceId = notification.getVoiceId().trim();
+        }
+
+        // Check event attributes (if event has custom voice ID)
+        if (voiceId == null && event.getAttributes() != null) {
             voiceId = (String) event.getAttributes().get("robocallVoiceId");
         }
 

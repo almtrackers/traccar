@@ -54,7 +54,17 @@ Each user that should receive robocalls must have a phone number configured:
 
 ### 4. Voice ID Configuration
 
-You can configure different voice IDs for different contexts using device/user attributes:
+Configure different voice IDs for different events and contexts. The system supports multiple levels of voice ID configuration:
+
+#### Per-Event Voice ID (Highest Priority)
+Configure specific voice IDs when creating notifications in the Traccar web interface:
+
+1. Go to **Settings > Notifications**
+2. Create or edit a notification
+3. Set the **Voice ID** field (e.g., `210`, `215`, `220`)
+4. Save the notification
+
+This allows different events (device offline, geofence violation, speed violation, etc.) to use different voices.
 
 #### Device-Level Voice ID
 ```xml
@@ -68,7 +78,13 @@ You can configure different voice IDs for different contexts using device/user a
 <entry key="robocallVoiceId">210</entry>
 ```
 
-**Priority Order:** Event attributes > Device attributes > User attributes > Default (210)
+#### Event Runtime Voice ID
+```xml
+<!-- In event attributes (programmatically set) -->
+<entry key="robocallVoiceId">210</entry>
+```
+
+**Priority Order:** Notification voiceId > Event attributes > Device attributes > User attributes > Default (210)
 
 ### 5. Vehicle Information Configuration
 
@@ -103,7 +119,7 @@ https://portal.robocall.pk/api/calls?api_key={API_KEY}&caller_id={PHONE}&voice_i
 |-----------|--------|---------|-------------|
 | `api_key` | Configuration | `0nCY2tgeMMZEhvr9KKLqipnZHhP7WR99` | Static API key |
 | `caller_id` | User.phone | `923001234567` | User's phone number |
-| `voice_id` | Attributes/Config | `210` | Voice ID for the call |
+| `voice_id` | Notification/Attributes | `210` | Voice ID for the call (per-event configurable) |
 | `text1` | Device info | `LEV6485` | Vehicle number/name |
 | `text2` | Event/Device info | `10th of May` | Expiry date or event date |
 

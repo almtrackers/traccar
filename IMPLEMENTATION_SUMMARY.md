@@ -3,6 +3,19 @@
 ## Overview
 Successfully implemented a custom robocall alert channel in Traccar that integrates with the Robocall.pk API to trigger automated phone calls when specific events occur.
 
+## Key Features Implemented
+
+✅ **Per-Event Voice ID Configuration**: Each notification can have its own voice_id for different events
+✅ **Multi-Level Voice ID Priority**: Notification voiceId > Event attributes > Device attributes > User attributes > Default (210)
+✅ **Database Schema Support**: Added voiceId column to tc_notifications table with migration
+✅ **HTTP GET Request Integration**: Calls Robocall.pk API with proper parameter formatting
+✅ **Dynamic Parameter Extraction**: Extracts caller_id, voice_id, text1, text2 from user/device data
+✅ **Phone Number Formatting**: Automatically formats phone numbers for Pakistani format
+✅ **Vehicle Information Extraction**: Gets vehicle number from device name or numberPlate attribute
+✅ **Date Handling**: Formats expiry dates or uses current date for time-sensitive events
+✅ **Comprehensive Error Handling**: Logs API responses and handles failures gracefully
+✅ **URL Encoding**: Properly encodes all parameters for HTTP requests
+
 ## Files Added/Modified
 
 ### 1. Core Implementation
@@ -17,18 +30,28 @@ Successfully implemented a custom robocall alert channel in Traccar that integra
   - Added `NOTIFICATOR_ROBOCALL_API_KEY` configuration key
   - Added `NOTIFICATOR_ROBOCALL_URL` configuration key with default
 
-### 3. Notification Management
+### 3. Data Model & Database
+- **`src/main/java/org/traccar/model/Notification.java`** (MODIFIED)
+  - Added `voiceId` field with getter/setter
+  - Enables per-event voice ID configuration
+- **`schema/changelog-6.9.0.xml`** (NEW)
+  - Database migration to add `voiceid` column to `tc_notifications` table
+- **`schema/changelog-master.xml`** (MODIFIED)
+  - Added reference to new changelog file
+
+### 4. Notification Management
 - **`src/main/java/org/traccar/notification/NotificatorManager.java`** (MODIFIED)
   - Added import for `NotificatorRobocall`
   - Registered "robocall" notificator in `NOTIFICATORS_ALL` map
 
-### 4. Testing
+### 5. Testing
 - **`src/test/java/org/traccar/notificators/NotificatorRobocallTest.java`** (NEW)
   - Comprehensive unit tests
   - Tests for successful API calls and error handling
   - Mock implementations for all dependencies
+  - Updated to support per-event voice ID testing
 
-### 5. Documentation
+### 6. Documentation
 - **`ROBOCALL_INTEGRATION.md`** (NEW)
   - Complete user documentation
   - Configuration instructions

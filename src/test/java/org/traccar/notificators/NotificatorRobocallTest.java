@@ -8,6 +8,7 @@ import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.model.Device;
 import org.traccar.model.Event;
+import org.traccar.model.Notification;
 import org.traccar.model.Position;
 import org.traccar.model.User;
 import org.traccar.notification.NotificationFormatter;
@@ -87,6 +88,11 @@ public class NotificatorRobocallTest {
         // Setup position
         Position position = new Position();
         
+        // Setup notification with voice ID
+        Notification notification = new Notification();
+        notification.setType("deviceOffline");
+        notification.setVoiceId("210");
+        
         // Setup message
         NotificationMessage message = new NotificationMessage("Test Subject", "Test Body");
         
@@ -100,7 +106,7 @@ public class NotificatorRobocallTest {
         when(response.getStatus()).thenReturn(200);
         
         // Execute
-        notificator.send(user, message, event, position);
+        notificator.send(notification, user, event, position);
         
         // Verify
         verify(client).target(contains("api_key=test-api-key"));
@@ -128,6 +134,12 @@ public class NotificatorRobocallTest {
         
         // Setup position and message
         Position position = new Position();
+        
+        // Setup notification
+        Notification notification = new Notification();
+        notification.setType("deviceOffline");
+        notification.setVoiceId("210");
+        
         NotificationMessage message = new NotificationMessage("Test", "Test");
         
         // Mock storage
@@ -140,7 +152,7 @@ public class NotificatorRobocallTest {
         when(response.getStatus()).thenReturn(200);
         
         // Execute
-        notificator.send(user, message, event, position);
+        notificator.send(notification, user, event, position);
         
         // Verify phone number is properly formatted
         verify(client).target(contains("caller_id=%2B923001234567"));
