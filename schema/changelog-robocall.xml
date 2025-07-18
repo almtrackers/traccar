@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd"
+  logicalFilePath="changelog-robocall">
+
+  <changeSet author="author" id="changelog-robocall">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="robocall_log"/>
+      </not>
+    </preConditions>
+
+    <createTable tableName="robocall_log">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="rcId" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+      <column name="callTo" type="VARCHAR(50)">
+        <constraints nullable="false" />
+      </column>
+      <column name="voiceId" type="VARCHAR(50)">
+        <constraints nullable="false" />
+      </column>
+      <column name="vehicleNumber" type="VARCHAR(100)">
+        <constraints nullable="true" />
+      </column>
+      <column name="callStatus" type="VARCHAR(50)">
+        <constraints nullable="true" />
+      </column>
+      <column name="dtmf" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+      <column name="duration" type="INT">
+        <constraints nullable="true" />
+      </column>
+      <column name="deviceId" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="eventId" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="userId" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="createdAt" type="TIMESTAMP">
+        <constraints nullable="false" />
+      </column>
+      <column name="updatedAt" type="TIMESTAMP">
+        <constraints nullable="true" />
+      </column>
+      <column name="retryCount" type="INT" defaultValueNumeric="0">
+        <constraints nullable="false" />
+      </column>
+      <column name="nextRetryAt" type="TIMESTAMP">
+        <constraints nullable="true" />
+      </column>
+    </createTable>
+
+    <createIndex indexName="idx_robocall_log_rcid" tableName="robocall_log">
+      <column name="rcId"/>
+    </createIndex>
+
+    <createIndex indexName="idx_robocall_log_device" tableName="robocall_log">
+      <column name="deviceId"/>
+    </createIndex>
+
+    <createIndex indexName="idx_robocall_log_user" tableName="robocall_log">
+      <column name="userId"/>
+    </createIndex>
+
+    <createIndex indexName="idx_robocall_log_retry" tableName="robocall_log">
+      <column name="nextRetryAt"/>
+      <column name="retryCount"/>
+    </createIndex>
+
+  </changeSet>
+
+</databaseChangeLog>

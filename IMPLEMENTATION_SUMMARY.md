@@ -1,149 +1,156 @@
-# Traccar Robocall Integration - Implementation Summary
+# Robocall Integration Implementation Summary
 
-## Overview
-Successfully implemented a custom robocall alert channel in Traccar that integrates with the Robocall.pk API to trigger automated phone calls when specific events occur.
+I have successfully implemented the complete robocall functionality for Traccar as requested. Here's what has been implemented:
 
-## Files Added/Modified
+## ✅ Completed Features
 
-### 1. Core Implementation
-- **`src/main/java/org/traccar/notificators/NotificatorRobocall.java`** (NEW)
-  - Main notificator implementation
-  - Handles HTTP GET requests to Robocall.pk API
-  - Extracts caller_id, voice_id, text1, text2 from user/device data
-  - Includes comprehensive error handling and logging
+### 1. New Notification Type "Robocall"
+- **File**: `NotificatorManager.java` (already had robocall support)
+- **Status**: ✅ Already implemented
+- The robocall notification type was already registered in the NotificatorManager
 
-### 2. Configuration
-- **`src/main/java/org/traccar/config/Keys.java`** (MODIFIED)
-  - Added `NOTIFICATOR_ROBOCALL_API_KEY` configuration key
-  - Added `NOTIFICATOR_ROBOCALL_URL` configuration key with default
+### 2. Enhanced NotificatorRobocall with Database Logging
+- **File**: `NotificatorRobocall.java` (completely rewritten)
+- **Features Implemented**:
+  - ✅ HTTP API calls to Robocall.pk
+  - ✅ JSON response parsing (extracts `rc_id`)
+  - ✅ Database logging of all robocall attempts
+  - ✅ Error handling and failed call logging
+  - ✅ Voice ID configuration from device/user attributes
+  - ✅ Vehicle number mapping from device attributes
+  - ✅ Integration with retry manager
 
-### 3. Notification Management
-- **`src/main/java/org/traccar/notification/NotificatorManager.java`** (MODIFIED)
-  - Added import for `NotificatorRobocall`
-  - Registered "robocall" notificator in `NOTIFICATORS_ALL` map
+### 3. Database Model and Schema
+- **File**: `RobocallLog.java` (new model)
+- **File**: `schema/changelog-robocall.xml` (new database migration)
+- **File**: `schema/changelog-master.xml` (updated to include migration)
+- **Features**:
+  - ✅ Complete robocall_log table with all required fields
+  - ✅ Proper indexing for performance
+  - ✅ Automatic database migration
 
-### 4. Testing
-- **`src/test/java/org/traccar/notificators/NotificatorRobocallTest.java`** (NEW)
-  - Comprehensive unit tests
-  - Tests for successful API calls and error handling
-  - Mock implementations for all dependencies
+### 4. Webhook Handler
+- **File**: `RobocallWebhookResource.java` (new API endpoint)
+- **Endpoint**: `POST /api/webhook/robocall`
+- **Features**:
+  - ✅ Receives status updates from Robocall.pk
+  - ✅ Updates call_status, dtmf, and duration
+  - ✅ Matches calls by rc_id
+  - ✅ Proper error handling and logging
 
-### 5. Documentation
-- **`ROBOCALL_INTEGRATION.md`** (NEW)
-  - Complete user documentation
-  - Configuration instructions
-  - Troubleshooting guide
-  - API integration details
+### 5. Retry Manager
+- **File**: `RobocallRetryManager.java` (new service)
+- **Features**:
+  - ✅ Automatic retry of failed calls (up to 3 attempts)
+  - ✅ 5-minute interval between retries
+  - ✅ Background processing with scheduled executor
+  - ✅ Retry only for failed/unanswered calls
+  - ✅ Integration with NotificatorRobocall
 
-- **`robocall-configuration-example.md`** (NEW)
-  - Quick configuration reference
-  - Example XML configuration
-  - Parameter explanations
+### 6. API for Robocall Logs
+- **File**: `RobocallLogResource.java` (new API endpoint)
+- **Endpoint**: `GET /api/robocall/logs`
+- **Features**:
+  - ✅ Query robocall logs by device, user, or limit
+  - ✅ Proper permission checking
+  - ✅ RESTful API design
 
-## Key Features Implemented
+### 7. Updated Tests
+- **File**: `NotificatorRobocallTest.java` (updated)
+- **Features**:
+  - ✅ Tests for successful robocalls
+  - ✅ Tests for failed robocalls with retry
+  - ✅ Tests for phone number formatting
+  - ✅ Database mocking and verification
 
-### ✅ API Integration
-- HTTP GET requests to `https://portal.robocall.pk/api/calls`
-- Proper URL encoding of all parameters
-- Dynamic parameter extraction from Traccar data
+### 8. Configuration and Documentation
+- **File**: `ROBOCALL_CONFIGURATION.md` (comprehensive setup guide)
+- **Features**:
+  - ✅ Complete configuration instructions
+  - ✅ API endpoint documentation
+  - ✅ Troubleshooting guide
+  - ✅ Security considerations
 
-### ✅ Dynamic Data Mapping
-| API Parameter | Source | Implementation |
-|---------------|--------|----------------|
-| `api_key` | Configuration | Static from `notificator.robocall.apiKey` |
-| `caller_id` | User.phone | Extracted and formatted with country code |
-| `voice_id` | Attributes | Priority: Event > Device > User > Default (210) |
-| `text1` | Device info | Priority: numberPlate > vehicleNumber > device.name |
-| `text2` | Date info | Priority: expiryDate > event.eventTime formatted |
+## 🔧 Configuration Required
 
-### ✅ Configuration System
-- Configurable API key and endpoint URL
-- Flexible voice ID assignment via attributes
-- Phone number validation and formatting
-- Support for international phone number formats
+Add these entries to your `traccar.xml`:
 
-### ✅ Error Handling
-- Comprehensive logging for API requests and responses
-- Graceful handling of missing data (phone numbers, devices)
-- HTTP error status handling with response body logging
-- Network exception handling
-
-### ✅ Integration Points
-- Seamlessly integrates with existing Traccar notification system
-- Compatible with all Traccar event types
-- Uses standard dependency injection patterns
-- Follows Traccar coding conventions
-
-## Technical Implementation Details
-
-### Architecture
-- Extends `Notificator` base class following Traccar patterns
-- Uses Jakarta dependency injection (`@Inject`, `@Singleton`)
-- Leverages Jakarta WS-RS HTTP client for API calls
-- Integrates with Traccar's Storage abstraction
-
-### Data Flow
-1. Event occurs → Notification triggered
-2. NotificatorRobocall.send() called with User, Event, Position
-3. Extract caller_id from User.phone
-4. Get Device from Storage using Event.deviceId
-5. Extract voice_id from Event/Device/User attributes
-6. Extract vehicle info (text1) from Device attributes/name
-7. Extract date info (text2) from Device/Event
-8. Build API URL with all parameters
-9. Make HTTP GET request to Robocall.pk
-10. Log success/failure with details
-
-### Security Considerations
-- API key stored in configuration (not logged)
-- URL parameters properly encoded to prevent injection
-- Phone number validation and sanitization
-- HTTP timeout handling prevents hanging requests
-
-## Testing Status
-- ✅ Compilation successful
-- ✅ Unit tests pass
-- ✅ Integration with NotificatorManager verified
-- ✅ Configuration keys properly defined
-
-## Configuration Example
 ```xml
-<!-- In traccar.xml -->
+<!-- Enable robocall notificator -->
 <entry key='notificator.types'>web,mail,sms,robocall</entry>
-<entry key='notificator.robocall.apiKey'>0nCY2tgeMMZEhvr9KKLqipnZHhP7WR99</entry>
+
+<!-- Robocall API Configuration -->
+<entry key='notificator.robocall.apiKey'>YOUR_ROBOCALL_API_KEY</entry>
 <entry key='notificator.robocall.url'>https://portal.robocall.pk/api/calls</entry>
 ```
 
-## Usage Example
+## 📊 Database Schema
+
+The new `robocall_log` table includes:
+- `id`, `rcId`, `callTo`, `voiceId`, `vehicleNumber`
+- `callStatus`, `dtmf`, `duration`
+- `deviceId`, `eventId`, `userId`
+- `createdAt`, `updatedAt`, `retryCount`, `nextRetryAt`
+
+## 🔄 Complete Flow
+
+1. **Alert Triggered** → NotificationManager calls NotificatorRobocall
+2. **API Call** → HTTP request to Robocall.pk with voice_id and vehicle data
+3. **Response Parsing** → Extract rc_id from JSON response
+4. **Database Logging** → Save call details to robocall_log table
+5. **Webhook Updates** → Robocall.pk sends status updates via webhook
+6. **Status Updates** → Update call_status, dtmf, duration in database
+7. **Retry Logic** → Failed calls automatically retried after 5 minutes
+
+## 🎯 Key Features
+
+### Voice ID Priority:
+1. Event attributes (`robocallVoiceId`)
+2. Device attributes (`robocallVoiceId`) 
+3. User attributes (`robocallVoiceId`)
+4. Default ("210")
+
+### Vehicle Number Priority:
+1. Device `numberPlate` attribute
+2. Device `vehicleNumber` attribute
+3. Device name
+4. "Unknown"
+
+### Retry Logic:
+- Max 3 attempts with 5-minute intervals
+- Retries triggered for: null, "", "failed", "no-answer", "busy"
+- Successful calls ("answered") are not retried
+
+## 🚀 Usage
+
 1. Configure API key in traccar.xml
-2. Set user phone number: `923001234567`
-3. Set device attributes: `numberPlate=LEV6485`, `expiryDate=2024-05-10`
-4. Create notification for "Device Offline" events with robocall enabled
-5. When device goes offline, API call will be made:
+2. Create notification in admin panel
+3. Set notification type to desired event
+4. Include "robocall" in notificators field
+5. Ensure user has valid phone number
+6. Configure webhook URL in Robocall.pk dashboard:
    ```
-   GET https://portal.robocall.pk/api/calls?api_key=...&caller_id=923001234567&voice_id=210&text1=LEV6485&text2=10th%20of%20May
+   https://your-traccar-domain/api/webhook/robocall
    ```
 
-## Future Enhancements (Optional)
-- Rate limiting to prevent spam calls
-- Retry mechanism for failed calls
-- Async API calls to improve performance
-- Voice message templates
-- Call scheduling/delay options
-- Integration with multiple robocall providers
+## ✅ Testing
 
-## Deployment Notes
-- No database migrations required
-- Backward compatible with existing installations
-- Can be enabled/disabled via configuration
-- Existing notifications will continue to work unchanged
+The implementation includes comprehensive tests and compiles successfully. All major components are properly integrated and follow Traccar's architectural patterns.
 
-## Status: ✅ COMPLETE
-The robocall integration is fully implemented, tested, and ready for use. All requirements have been met:
-- ✅ Custom alert channel created
-- ✅ HTTP API integration implemented
-- ✅ Dynamic parameter extraction working
-- ✅ Configuration system in place
-- ✅ Error handling and logging implemented
-- ✅ Documentation provided
-- ✅ Tests included
+## 🔧 Files Modified/Created
+
+### New Files:
+- `src/main/java/org/traccar/model/RobocallLog.java`
+- `src/main/java/org/traccar/api/resource/RobocallWebhookResource.java` 
+- `src/main/java/org/traccar/api/resource/RobocallLogResource.java`
+- `src/main/java/org/traccar/database/RobocallRetryManager.java`
+- `schema/changelog-robocall.xml`
+- `ROBOCALL_CONFIGURATION.md`
+- `IMPLEMENTATION_SUMMARY.md`
+
+### Modified Files:
+- `src/main/java/org/traccar/notificators/NotificatorRobocall.java` (completely rewritten)
+- `src/test/java/org/traccar/notificators/NotificatorRobocallTest.java` (updated)
+- `schema/changelog-master.xml` (added robocall changelog)
+
+The implementation is production-ready and handles all the requirements you specified!
